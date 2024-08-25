@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <script src="https://unpkg.com/htmx.org@1.8.5"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #007BFF;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: calc(100% - 24px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #result p {
+            font-size: 18px;
+            color: #333;
+        }
+        #result button {
+            background-color: #007BFF;
+            margin-top: 10px;
+        }
+        #result button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function prepareJsonData(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const urlInput = document.getElementById('urlInput').value;
+
+            const jsonData = {
+                url: urlInput
+            };
+
+            // Sending the request using fetch to ensure correct JSON format
+            fetch('/shorten', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                    <p>Shortened URL: <a href="${data.url}" id="short-url">${data.url}</a></p>
+                    <button onclick="copyToClipboard()">Copy</button>
+                `;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function copyToClipboard() {
+            const urlElement = document.getElementById('short-url');
+            const urlText = urlElement.textContent || urlElement.innerText;
+            navigator.clipboard.writeText(urlText).then(function() {
+                const button = document.querySelector('#result button');
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000); // Reset the text after 2 seconds
+            }).catch(function(err) {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Shorten Your URL</h1>
+    <form id="shorten-form" onsubmit="prepareJsonData(event)">
+        <input type="text" id="urlInput" placeholder="Enter URL">
+        <button type="submit">Shorten</button>
+    </form>
+    <div id="result"></div>
+</div>
+</body>
+</html>
